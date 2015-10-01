@@ -595,7 +595,7 @@ class MonkeyPatching extends BaseGetterSetter
 
 
 			file_put_contents($versionFile, serialize($info));
-			chmod($versionFile, 0777);
+			@chmod($versionFile, 0777);
 
 			$this->setCache($cacheKey, $info);
 		}
@@ -977,16 +977,23 @@ class MonkeyPatching extends BaseGetterSetter
 
 						$summaryLexes[] = array(U_STRING, "\n", $summaryLexes[count($summaryLexes)-1][2]);
 
+						/*
+						 * Добавляем старое тело функции, переименовывая её
+						 */
+
+						$first_renamed = false;
 						for($i = $srcFuncInfo['startLexPos']; $i<=$srcFuncInfo['endLexPos']; $i++)
 						{
 							$lex = $srcParseData['lexes'][$i];
-							if ($lex[0] == T_STRING && $lex[1] == $funcName)
+							if (!$first_renamed && $lex[0] == T_STRING && $lex[1] == $funcName)
 							{
 								$lex[1] = self::get_old_function_name($className, $funcName);
+								$first_renamed = true;
 							}
 							$summaryLexes[] = $lex;
 
 						}
+
 
 
 						$funcData = $patchParseData['classes'][$className]['functions'][$funcName];
